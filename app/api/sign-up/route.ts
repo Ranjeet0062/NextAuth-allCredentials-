@@ -2,7 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcrypt";
 import {mailSender} from "../../email/mailSendar"
-import VerificationEmail from "../../email/verificationEmailTemplete"
+import  EmailTemplate  from '../../email/verificationEmailTemplete';
+
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
       digits: true,
       lowerCaseAlphabets: false,
       upperCaseAlphabets: false,
+      specialChars: false
     });
     const hashedPassword = await bcrypt.hash(password, 10);
     if (existngUserByEmail) {
@@ -67,8 +69,17 @@ export async function POST(request: Request) {
         },
       });
     }
-    const sendEmailResponse=await mailSender(email,"Email verification",VerificationEmail({username,otp:verifyCode.toString()}));
-    // console.log(sendEmailResponse);
+    const sendEmailResponse=await mailSender(email,EmailTemplate({username,otp:verifyCode.toString()}));
+    console.log("sendEmailResponse",sendEmailResponse)
+    if(!sendEmailResponse.success){
+      return Response.json(
+        {
+          success: false,
+          message: "User registered failed. Please try again.",
+        },
+        { status: 401 }
+      );
+    }
     return Response.json(
       {
         success: true,
@@ -76,5 +87,13 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error) {}
+  } catch (error) {
+    return Response.json(
+      {
+        success: false,
+        message: "signup-failed. please try again",
+      },
+      { status: 201 }
+    );
+  }
 }

@@ -11,3 +11,6 @@ export const signUpValidation=z.object({
         "Password must contain at least one uppercase letter, one lowercase letter, one special character, and one number."
       )
 })
+export const verifySchema = z.object({
+  code: z.string().length(6, 'Verification code must be 6 digits'),
+});
